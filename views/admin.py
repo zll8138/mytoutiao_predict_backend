@@ -11,15 +11,16 @@ from app import app
 
 @app.route("/mp/v1_0/authorizations", methods=["POST"])
 def login():
-    hashed_password = generate_password_hash('246810')
-    User(
-        mobile='13911111111',
-        code=hashed_password,
-        photo='http://toutiao-img.itheima.net/FuyELvGh8jbise6dfoEr0W7luPLq',
-        gender=1,
-        name='zhangsan',
-        intro='zhangsanfeng'
-    ).save()
+    # hashed_password = generate_password_hash('246810')
+    # User(
+    #     mobile='13911111111',
+    #     code=hashed_password,
+    #     photo='http://toutiao-img.itheima.net/FuyELvGh8jbise6dfoEr0W7luPLq',
+    #     gender=1,
+    #     name='zhangsan',
+    #     intro='zhangsanfeng',
+    #     email='zhangsan@qq.com'
+    # ).save()
 
     if not request.json.get("mobile"):
         return jsonify({"error": "mobile not specified"}), 409
@@ -42,18 +43,18 @@ def login():
     if not check_password_hash(user.code, request.json.get("code")):
         return jsonify({"error": "Invalid password"}), 401
 
-    # token = jwt.encode({
-    #     "userid": str(user.id),
-    #     "username": user.username,
-    #     "email": user.email,
-    #     "password": user.password,
-    #     "created": str(user.created)
-    # }, app.config["SECRET_KEY"])
+    token = jwt.encode({
+        "userid": str(user.id),
+        "name": user.name,
+        "email": user.email,
+        # "password": user.password,
+        "created": str(user.created)
+    }, app.config["SECRET_KEY"]).decode('utf-8')
 
     return jsonify({
         "message": 'OK',
         "data": {
             "user": user.name,
-            "token": "xxxxxxxxxxxxxxxx",
+            "token": token,
         }
     })
