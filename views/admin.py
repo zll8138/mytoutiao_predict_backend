@@ -58,3 +58,12 @@ def login():
             "token": token,
         }
     })
+
+@app.route("/mp/v1_0/user/profile",methods=["GET"])
+def get_user_profile():
+    user = User.objects(name='zhangsan').first()
+    return jsonify({
+        "message": 'OK',
+        "data": user.to_public_json()
+    })
+
