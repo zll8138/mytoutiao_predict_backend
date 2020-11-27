@@ -9,7 +9,7 @@ from functools import wraps
 from mongoengine import Q
 
 import config
-from models import User, Channel, Img
+from models import User, Channel, Img, Article, Cover
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app import app
@@ -154,19 +154,31 @@ def images_rsp(filename):
 
 
 # {"message": "OK", "data": {"id": 30840, "collect": true}}
-@app.route("/mp/v1_0/user/images/<string:imageId>", methods=["PUT"])
+@app.route("/mp/v1_0/user/images/<string:imageId>", methods=["PUT","DELETE"])
 @login_required
 def collectImage(userid,imageId):
-    img = Img.objects(id=imageId).first()
-    img.is_collected = request.json.get('collect')
-    img.save()
-    return jsonify({
-        "message": 'OK',
-        "data": {
-            "id": str(img.id),
-            "collect": img.is_collected
-        }
-    })
+    print(request.method)
+    if request.method == 'PUT':
+        img = Img.objects(id=imageId).first()
+        img.is_collected = request.json.get('collect')
+        img.save()
+        return jsonify({
+            "message": 'OK',
+            "data": {
+                "id": str(img.id),
+                "collect": img.is_collected
+            }
+        })
+    elif request.method == 'DELETE':
+        img = Img.objects(id=imageId).first()
+        img.delete()
+        return jsonify({
+            "message": 'OK',
+            "data": {
+                "id": str(img.id),
+                "collect": img.is_collected
+            }
+        })
 
 @app.route("/mp/v1_0/user/images")
 @login_required
@@ -190,5 +202,41 @@ def get_images(userid):
             "page": page,
             "per_page": per_page,
             "results": paginated_imgs.to_public_json()
+        }
+    })
+
+@app.route("/mp/v1_0/articles", methods=["POST"])
+@login_required
+def addArticle(userid):
+    user = User.objects(id=userid).first()
+
+    draft = request.args.get('draft')
+    if draft == "false":
+        status = 1 #发布并审核通过
+    else:
+        status = 0 #草稿
+    body = request.json
+    print(draft)
+    print(body)
+    print(body["cover"])
+    print(body.get("cover"))
+
+    cover = Cover(
+        type=body.get("cover")['type'],
+        images=body.get("cover")['images']
+    ).save()
+
+    article = Article(
+        title=body.get("title"),
+        channel=body.get('channel_id'),
+        content=body.get("content"),
+        user=user,
+        cover=cover,
+        status=status,
+    ).save()
+
+    return jsonify({
+        "message": 'OK',
+        "data": {
         }
     })
