@@ -19,6 +19,17 @@ class CustomQuerySet(QuerySet):
 
         return result
 
+    def to_public_json_client(self):
+        result = []
+        try:
+            for doc in self:
+                jsonDic = doc.to_public_json_client()
+                result.append(jsonDic)
+        except:
+            print('error')
+
+        return result
+
 class Channel(Document):
     name = StringField(max_length=120, required=True)
 
@@ -99,6 +110,18 @@ class Article(Document):
         }
         return data
 
+    def to_public_json_client(self):
+        data = {
+            "art_id": str(self.id),
+            "status": self.status,
+            "title" : self.title,
+            "pubdate":self.created,
+            "aut_name":self.user.name,
+            "content":self.content,
+            "cover":self.cover.to_public_json()
+        }
+        return data
+
 class Img(Document):
     user = ReferenceField(User, reverse_delete_rule=CASCADE)
     url = StringField(max_length=200, required=True)
@@ -133,10 +156,10 @@ class Img(Document):
     # print(str1)  # 2019-10-11 14:15:56.514000
 
 
-    # channel = Channel.objects(id='5fbf2345d757c18a921094b8').first()
+    # channel = Channel.objects(id='5fbf2345d757c18a921094b9').first()
     # user = User.objects().first()
     # cover = Cover.objects().first()
-    # for i in range(55):
+    # for i in range(33):
     #     time.sleep(1)
     #     print(i)
     #     article = Article(
